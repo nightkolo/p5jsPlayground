@@ -2,6 +2,8 @@ var TILE_SIZE = 40;
 var spd = 12;
 
 let headX, headY;
+let appleX, appleY;
+
 let posX = 0;
 let posY = 0;
 
@@ -10,7 +12,6 @@ var gridY = 0;
 var gridSizeX = 0;
 var gridSizeY = 0;
 
-let appleX, appleY;
 let inc = false;
 
 var dir = {
@@ -85,7 +86,7 @@ function draw() {
 
   fill("white");
   square(headX, headY, TILE_SIZE);
-  
+
   fill("yellow");
   square(appleX, appleY, TILE_SIZE);
 }
