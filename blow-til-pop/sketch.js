@@ -103,11 +103,12 @@ function circleCollision(x1, y1, d1, x2, y2, d2) {
   return distance <= (d1 / 2) + (d2 / 2);
 }
 function borderCollision(bubSize, bubX, bubY) {
+  let radius = bubSize / 2;
   return (
-    bubX - (bubSize / 2) <= 0 ||  // Left border
-    bubX + (bubSize / 2) >= width ||  // Right border
-    bubY - (bubSize / 2) <= 0 ||  // Top border
-    bubY + (bubSize / 2) >= height  // Bottom border
+    bubX - radius <= 0 ||  // Left border
+    bubX + radius >= width ||  // Right border
+    bubY - radius <= 0 ||  // Top border
+    bubY + radius >= height  // Bottom border
   );
 }
 function mousePressed(){
