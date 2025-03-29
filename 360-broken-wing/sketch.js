@@ -11,9 +11,9 @@ var rounds = 0;
 let pMain;
 
 class poorBird {
-  #flapCount;
+  #flapCount = 0;
 
-  constructor(){
+  constructor() {
     this.slowness = 50;
     this.diameter = 500;
     this.x = 0;
@@ -22,24 +22,33 @@ class poorBird {
     this.jumpVel = 4;
     this.fallVel = 0;
     this.t = 0;
+    this.#flapCount = 0;
   }
-  getFlapCount(){
+  getFlapCount() {
     return this.#flapCount;
   }
-  getXnormalized(){
+  getNormalizedPosition() {
+    return {
+      x: sin(this.t / this.slowness),
+      y: cos(this.t / this.slowness),
+    };
+  }
+  // TODO: remove
+  getXnormalized() {
     return sin(this.t / this.slowness);
   }
-  getYnormalized(){
+  // TODO: remove
+  getYnormalized() {
     return cos(this.t / this.slowness);
   }
   jump() {
     this.fallVel = -Math.abs(this.jumpVel);
     this.#flapCount++;
   }
-  update(){
+  update() {
     this.fallVel += grav;
     this.diameter -= this.fallVel;
-    this.diameter = Math.max(boundaryGrd/2 + (this.size/2), this.diameter);
+    this.diameter = Math.max((boundaryGrd/2) + (this.size/2), this.diameter);
     
     if (this.diameter > (boundarySize/2)-(this.size/2)) {
       this.fallVel = 0;
@@ -48,17 +57,18 @@ class poorBird {
   
     this.t += 1;
 
-    this.y = this.getYnormalized() * this.diameter;
-    this.x = this.getXnormalized() * this.diameter;
+    const normalized = this.getNormalizedPosition();
+    this.y = normalized.y * this.diameter;
+    this.x = normalized.x * this.diameter;
   }
-  show(){
+  show() {
     stroke("Black");
     strokeWeight(this.size / 6);
     circle((width/2) + this.y, (height/2) + this.x, this.size); 
   }
 }
 
-function generateEnvironment(){
+function generateEnvironment() {
   noStroke();
   
   fill("white");
@@ -70,12 +80,12 @@ function generateEnvironment(){
   displayInfo();
 }
 
-function displayInfo(){
+function displayInfo() {
   fill("white");
   textSize(60);
   textAlign(CENTER);
   
-  print(pMain.getXnormalized());
+  print(pMain.getNormalizedPosition().x);
   // TODO: add rounds counter
   text(`${rounds}`, width/2, height/2);
 }
