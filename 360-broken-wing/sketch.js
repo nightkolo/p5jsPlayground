@@ -7,6 +7,8 @@ var boundarySize = 550;
 var boundaryGrd = 150;
 
 var rounds = 0;
+var crossline = 180;
+var hasCrossed = false;
 
 let pMain;
 
@@ -33,13 +35,9 @@ class poorBird {
       y: cos(this.t / this.slowness),
     };
   }
-  // TODO: remove
-  getXnormalized() {
-    return sin(this.t / this.slowness);
-  }
-  // TODO: remove
-  getYnormalized() {
-    return cos(this.t / this.slowness);
+  getPosAngle(){
+    const normalized = this.getNormalizedPosition();
+    return 360 - findVectorAngle(normalized.x, normalized.y);
   }
   jump() {
     this.fallVel = -Math.abs(this.jumpVel);
@@ -68,6 +66,59 @@ class poorBird {
   }
 }
 
+function findVectorAngle(x, y){
+  let value;
+
+  var toDegrees = function(a){
+    return a * (180.0 / Math.PI);
+  }
+
+  const findQuadrant = function(x, y) {
+    if (x > 0 && y > 0) {
+      return 1;
+    } else if (x < 0 && y > 0) {
+      return 2;
+    } else if (x < 0 && y < 0) {
+      return 3;
+    } else if (x > 0 && y < 0) {
+      return 4;
+    }
+  }
+  
+  if (x === 0 && y == 0) {
+    return NaN;
+  } else if (x === 0) {
+    if (y > 0) {
+      value = Math.PI / 2.0;
+    } else if (y < 0) {
+      value = Math.PI * 1.5;
+    }
+  } else if (y === 0) {
+    if (x > 0) {
+      value = Math.PI;
+    } else if (x < 0) {
+      value = 0;
+    }
+  } else {
+    value = Math.atan(y / x);
+    switch (findQuadrant(x, y)) {
+      case 1:
+        value = Math.abs(value);
+        break;
+      case 2:
+        value = Math.PI - Math.abs(value);
+        break;
+      case 3:
+        value = Math.PI + Math.abs(value);
+        break;
+      case 4:
+        value = (Math.PI * 2.0) - Math.abs(value);
+        break;
+    }
+  }
+  return toDegrees(value);
+}
+
 function generateEnvironment() {
   noStroke();
   
@@ -85,8 +136,13 @@ function displayInfo() {
   textSize(60);
   textAlign(CENTER);
   
-  print(pMain.getNormalizedPosition().x);
-  // TODO: add rounds counter
+  if (pMain.getPosAngle() > crossline && !hasCrossed){
+    rounds++;
+    hasCrossed = true;
+  } else if (pMain.getPosAngle() < crossline){
+    hasCrossed = false;
+  }
+
   text(`${rounds}`, width/2, height/2);
 }
 
