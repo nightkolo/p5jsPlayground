@@ -1,5 +1,5 @@
 // A game about a bird with broken wings :(
-// Very WIP
+// I mean... it works?
 
 var grav = 0.25;
 
@@ -10,7 +10,6 @@ var rounds = -1;
 var crossline = 180;
 var hasCrossed = false;
 var dangerZones = [];
-
 
 let pMain;
 
@@ -77,7 +76,6 @@ class Pillar {
     this.gapStartY = 0;
     this.gapEndX = 0;
     this.gapEndY = 0;
-    // this.gLine = [];
   }
   update() {
     const pos = findPos(this.angle); // Get the position based on the angle
@@ -110,11 +108,10 @@ function findPos(angle){
     y: Math.sin(radians),
   };
 }
-
 function findVector(x, y){
   let value;
 
-  const findQuadrant = function(x, y) {
+  const findQuadrant =function(x, y) {
     if (x > 0 && y > 0) {
       return 1;
     } else if (x < 0 && y > 0) {
@@ -159,7 +156,6 @@ function findVector(x, y){
     }
     return value * (180.0 / Math.PI);
   }
-
 function generateCrossline(normalizedPos){
   return [
     (normalizedPos.x * (boundaryGrd/2)) + (width/2),
@@ -168,7 +164,6 @@ function generateCrossline(normalizedPos){
     (normalizedPos.y * (boundarySize/2)) + (height/2)
   ]
 }
-
 function showPillar(angle = 359, passThrough = 0, gapHeight = 100, weight = 15) {
   const pos = findPos(angle); // Get the position based on the angle
   const gLine = generateCrossline(pos); // Generate the pillar line coordinates
@@ -192,7 +187,6 @@ function showPillar(angle = 359, passThrough = 0, gapHeight = 100, weight = 15) 
   stroke("white");
   line(gapStartX, gapStartY, gapEndX, gapEndY);
 }
-
 function showCrossline(cross = crossline, weight = 15, opacity = 255/4){
   const pos = findPos(cross);
   const gLine = generateCrossline(pos);
@@ -202,7 +196,6 @@ function showCrossline(cross = crossline, weight = 15, opacity = 255/4){
 
   line(gLine[0],gLine[1],gLine[2],gLine[3])
 }
-
 function showInfo() {
   fill("white");
   textSize(60);
@@ -220,26 +213,45 @@ function showInfo() {
 }
 
 let pill;
-let pill2;
-
 
 function setup() {
   createCanvas(700, 600);
   frameRate(60);
   pMain = new poorBird();
-  pill = new Pillar(90, 130);
-  // pill2 = new Pillar(245, 45);
+
+  pill = new Pillar(90, 90);
   dangerZones.push(pill);
-  // dangerZones.push(pill2);
-  // print(pill.passThrough);
-  // print((pill.passThrough) + pill.gapHeight);
-  // print("");
 }
 
+function draw() {
+  background("blue");
+  rectMode(CENTER);  
+  noStroke();
+  
+  fill("white");
+  circle(width/2, height/2, boundarySize);
+  
+  dangerZones.forEach(function(p){
+    p.update();
+    p.show();
+    if (isBirdInGap(pMain, p)) {
+      isHit();
+    }
+  });
+  
+  noStroke();
+  fill("blue");
+  circle(width/2, height/2, boundaryGrd);
+  
+  showInfo();
+  showCrossline();
+  
+  pMain.update();
+  pMain.show();
+}
 function isHit(){
   print("I'm hit!")
 }
-
 function isBirdInGap(bird, pillar) {
   // Normalize the bird's position relative to the center
   const birdDistance = bird.diameter;
@@ -256,39 +268,6 @@ function isBirdInGap(bird, pillar) {
   // Return true if both conditions are met
   return withinGap && withinAngle;
 }
-
-function draw() {
-  background("blue");
-  rectMode(CENTER);  
-  noStroke();
-
-  fill("white");
-  circle(width/2, height/2, boundarySize);
-
-  dangerZones.forEach(function(p){
-    p.update();
-    p.show();
-    // print(pMain.diameter);
-    // print(p.passThrough);
-    // print((p.passThrough) + p.gapHeight);
-    // print(pMain.getPosAngle());
-    // print(p.angle);
-    if (isBirdInGap(pMain, p)) {
-      isHit();
-    }
-  });
-
-  noStroke();
-  fill("blue");
-  circle(width/2, height/2, boundaryGrd);
-  
-  showInfo();
-  showCrossline();
-
-  pMain.update();
-  pMain.show();
-}
-
 function keyPressed(event){
   if (keyCode == 32){
     pMain.jump();
