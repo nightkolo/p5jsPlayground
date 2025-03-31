@@ -6,7 +6,7 @@ var grav = 0.25;
 var boundarySize = 550;
 var boundaryGrd = 150;
 
-var rounds = 0;
+var rounds = -1;
 var crossline = 180;
 var hasCrossed = false;
 
@@ -37,7 +37,7 @@ class poorBird {
   }
   getPosAngle(){
     const normalized = this.getNormalizedPosition();
-    return 360 - findVectorAngle(normalized.x, normalized.y);
+    return 360 - findVector(normalized.x, normalized.y);
   }
   jump() {
     this.fallVel = -Math.abs(this.jumpVel);
@@ -66,12 +66,16 @@ class poorBird {
   }
 }
 
-function findVectorAngle(x, y){
-  let value;
+function findPos(angle){
+  const radians = (angle + 90) * (Math.PI / 180); // Convert degrees to radians
+  return {
+    x: Math.cos(radians),
+    y: Math.sin(radians),
+  };
+}
 
-  var toDegrees = function(a){
-    return a * (180.0 / Math.PI);
-  }
+function findVector(x, y){
+  let value;
 
   const findQuadrant = function(x, y) {
     if (x > 0 && y > 0) {
@@ -114,24 +118,26 @@ function findVectorAngle(x, y){
       case 4:
         value = (Math.PI * 2.0) - Math.abs(value);
         break;
+      }
     }
+    return value * (180.0 / Math.PI);
   }
-  return toDegrees(value);
+  
+function showCrossline(cross = crossline, weight = 15, opacity = 255/4){
+  const pos = findPos(cross);
+
+  strokeWeight(weight);
+  stroke(0,0,0,opacity);
+
+  line(
+    (pos.x * (boundaryGrd/2)) + (width/2),
+    (pos.y * (boundaryGrd/2)) + (height/2),
+    (pos.x * (boundarySize/2)) + (width/2),
+    (pos.y * (boundarySize/2)) + (height/2)
+  )
 }
 
-function generateEnvironment() {
-  noStroke();
-  
-  fill("white");
-  circle(width/2, height/2, boundarySize);
-  
-  fill("blue");
-  circle(width/2, height/2, boundaryGrd);
-  
-  displayInfo();
-}
-
-function displayInfo() {
+function showInfo() {
   fill("white");
   textSize(60);
   textAlign(CENTER);
@@ -145,6 +151,21 @@ function displayInfo() {
 
   text(`${rounds}`, width/2, height/2);
 }
+
+function generateEnvironment() {
+  noStroke();
+  
+  
+  fill("white");
+  circle(width/2, height/2, boundarySize);
+  
+  fill("blue");
+  circle(width/2, height/2, boundaryGrd);
+  
+  showInfo();
+  showCrossline();
+}
+
 
 function setup() {
   createCanvas(700, 600);
