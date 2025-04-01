@@ -9,9 +9,19 @@ const boundarySize = 550;
 const boundaryGrd = 150;
 
 var rounds = -1;
+var ringsPassed = 0;
 var crossline = 180;
+
 var hasCrossed = false;
-var dangerZones = [];
+var hasJustPassedRing = false;
+var blessedZones = [];
+
+const cen = function(){
+  return {
+    x: width / 2,
+    y: height / 2,
+  };
+}
 
 let pMain;
 
@@ -26,15 +36,15 @@ class PoorBird {
     this.fallVel = 0;
     this.t = 0;
   }
-  getNormalizedPosition() {
+  getNormalizedPos() {
     return {
       x: sin(this.t / this.slowness),
       y: cos(this.t / this.slowness),
     };
   }
-  getPosAngle(){
-    const normalized = this.getNormalizedPosition();
-    return 360 - findVector(normalized.x, normalized.y);
+  getAngle(){
+    const normal = this.getNormalizedPos();
+    return 360 - findVector(normal.x, normal.y);
   }
   jump() {
     this.fallVel = -Math.abs(this.jumpVel);
@@ -48,52 +58,50 @@ class PoorBird {
       this.fallVel = 0;
       this.diameter = (boundarySize/2)-(this.size/2);
     }
-  
+    
     this.t += 1;
-
-    const normalized = this.getNormalizedPosition();
-    this.y = normalized.y * this.diameter;
-    this.x = normalized.x * this.diameter;
+    
+    const normal = this.getNormalizedPos();
+    this.y = normal.y * this.diameter;
+    this.x = normal.x * this.diameter;
   }
   show() {
     stroke("Black");
     strokeWeight(this.size / 6);
-    circle((width/2) + this.y, (height/2) + this.x, this.size); 
+    circle(cen().x + this.y, cen().y + this.x, this.size); 
   }
 }
-
-class Pillar {
-  constructor(angl, passThroug = 0, gahH = 90, weigh = 15){
-    this.angle = angl;
-    this.passThrough = passThroug;
-    this.gapHeight = gahH;
-    this.weight = weigh;
-    this.gapStartX = 0;
-    this.gapStartY = 0;
-    this.gapEndX = 0;
-    this.gapEndY = 0;
+class Ring {
+  constructor(pAngle, pPassThrough = 0, pRingH = 90){
+    this.angle = pAngle;
+    this.passThrough = pPassThrough;
+    this.ringH = pRingH;
+    this.ringX1 = 0;
+    this.ringY1 = 0;
+    this.ringX2 = 0;
+    this.ringY2 = 0;
   }
   update() {
     const pos = findPos(this.angle); // Get the position based on the angle
-    // this.gLine = generateCrossline(pos); // Generate the pillar line coordinates
-  
-    // Calculate the offset for the gap based on the angle
+
+    // Calculate the offset for the ring based on the angle
     const offsetX = pos.x * this.passThrough; // Offset in the x direction
     const offsetY = pos.y * this.passThrough; // Offset in the y direction
     
-    // Calculate the start and end points of the gap
-    this.gapStartX = (pos.x * (boundaryGrd / 2)) + (width / 2) + offsetX;
-    this.gapStartY = (pos.y * (boundaryGrd / 2)) + (height / 2) + offsetY;
-    this.gapEndX = this.gapStartX + (pos.x * this.gapHeight);
-    this.gapEndY = this.gapStartY + (pos.y * this.gapHeight);
+    // Calculate the start and end points of the ring
+    this.ringX1 = (pos.x * (boundaryGrd / 2)) + cen().x + offsetX;
+    this.ringY1 = (pos.y * (boundaryGrd / 2)) + cen().y + offsetY;
+    this.ringX2 = this.ringX1 + (pos.x * this.ringH);
+    this.ringY2 = this.ringY1 + (pos.y * this.ringH);
   }
   show() {
-    strokeWeight(this.weight);
-    // Draw the this.gap (white line)
+    strokeWeight(10);
+    // Draw the ring (red line)
     stroke("red");
-    line(this.gapStartX, this.gapStartY, this.gapEndX, this.gapEndY);
+    line(this.ringX1, this.ringY1, this.ringX2, this.ringY2);
   }
 }
+// Math helpers
 function findPos(angle){
   const rad = (angle + 90) * (Math.PI / 180);
   return {
@@ -102,7 +110,7 @@ function findPos(angle){
   };
 }
 function findVector(x, y){
-  let value;
+  let value = 0;
 
   const findQuadrant = function(x, y) {
     if (x > 0 && y > 0) {return 1; }
@@ -126,19 +134,18 @@ function findVector(x, y){
       value = 0;
     }
   } else {
-    value = Math.atan(y / x);
     switch (findQuadrant(x, y)) {
       case 1:
-        value = Math.abs(value);
+        value = Math.abs(Math.atan(y / x));
         break;
       case 2:
-        value = Math.PI - Math.abs(value);
+        value = Math.PI - Math.abs(Math.atan(y / x));
         break;
       case 3:
-        value = Math.PI + Math.abs(value);
+        value = Math.PI + Math.abs(Math.atan(y / x));
         break;
       case 4:
-        value = (Math.PI * 2.0) - Math.abs(value);
+        value = (Math.PI * 2.0) - Math.abs(Math.atan(y / x));
         break;
       }
     }
@@ -146,13 +153,13 @@ function findVector(x, y){
   }
 // function generateCrossline(normalizedPos){
 //   return [
-//     (normalizedPos.x * (boundaryGrd/2)) + (width/2),
-//     (normalizedPos.y * (boundaryGrd/2)) + (height/2),
-//     (normalizedPos.x * (boundarySize/2)) + (width/2),
-//     (normalizedPos.y * (boundarySize/2)) + (height/2)
+//     (normalizedPos.x * (boundaryGrd/2)) + (cen().x),
+//     (normalizedPos.y * (boundaryGrd/2)) + (cen().y),
+//     (normalizedPos.x * (boundarySize/2)) + (cen().x),
+//     (normalizedPos.y * (boundarySize/2)) + (cen().y)
 //   ]
 // }
-// function showPillar(angle = 359, passThrough = 0, gapHeight = 100, weight = 15) {
+// function showring(angle = 359, passThrough = 0, ringH = 100, weight = 15) {
 //   const pos = findPos(angle);
 //   const gLine = generateCrossline(pos); 
 
@@ -163,14 +170,16 @@ function findVector(x, y){
 //   const offsetX = pos.x * passThrough; 
 //   const offsetY = pos.y * passThrough;
 
-//   const gapStartX = (pos.x * (boundaryGrd / 2)) + (width / 2) + offsetX;
-//   const gapStartY = (pos.y * (boundaryGrd / 2)) + (height / 2) + offsetY;
-//   const gapEndX = gapStartX + (pos.x * gapHeight);
-//   const gapEndY = gapStartY + (pos.y * gapHeight);
+//   const ringX1 = (pos.x * (boundaryGrd / 2)) + (cen().x) + offsetX;
+//   const ringY1 = (pos.y * (boundaryGrd / 2)) + (cen().y) + offsetY;
+//   const ringX2 = ringX1 + (pos.x * ringH);
+//   const ringY2 = ringY1 + (pos.y * ringH);
 
 //   stroke("white");
-//   line(gapStartX, gapStartY, gapEndX, gapEndY);
+//   line(ringX1, ringY1, ringX2, ringY2);
 // }
+
+// Environment
 function showCrossline(cross = crossline, weight = 15, opacity = 255/4){
   const pos = findPos(cross);
   // const gLine = generateCrossline(pos);
@@ -179,27 +188,29 @@ function showCrossline(cross = crossline, weight = 15, opacity = 255/4){
   stroke(0,0,0,opacity);
 
   line(
-    (pos.x * (boundaryGrd/2)) + (width/2),
-    (pos.y * (boundaryGrd/2)) + (height/2),
-    (pos.x * (boundarySize/2)) + (width/2),
-    (pos.y * (boundarySize/2)) + (height/2))
+    (pos.x * (boundaryGrd/2)) + (cen().x),
+    (pos.y * (boundaryGrd/2)) + (cen().y),
+    (pos.x * (boundarySize/2)) + (cen().x),
+    (pos.y * (boundarySize/2)) + (cen().y))
 }
 function showInfo() {
   fill("white");
   textSize(60);
   textAlign(CENTER);
   
-  if (pMain.getPosAngle() > crossline && !hasCrossed){
+  // TODO: maybe refactor this glue and butter stitched together code
+  if (pMain.getAngle() > crossline && !hasCrossed){
     rounds++;
     hasCrossed = true;
-  } else if (pMain.getPosAngle() < crossline){
+  } else if (pMain.getAngle() < crossline){
     hasCrossed = false;
   }
 
   noStroke();
-  text(`${rounds}`, width/2, height/2);
+  text(`${rounds}`, cen().x, cen().y);
 }
 
+// p5.js
 let pill;
 let pill2;
 
@@ -208,11 +219,11 @@ function setup() {
   frameRate(60);
   pMain = new PoorBird();
 
-  pill = new Pillar(90, 90);
-  pill2 = new Pillar(270, 0);
+  pill = new Ring(90, 90, 30);
+  pill2 = new Ring(270, 0);
 
-  dangerZones.push(pill);
-  dangerZones.push(pill2);
+  blessedZones.push(pill);
+  blessedZones.push(pill2);
 }
 function draw() {
   background("blue");
@@ -220,19 +231,19 @@ function draw() {
   noStroke();
   
   fill("white");
-  circle(width/2, height/2, boundarySize);
+  circle(cen().x, cen().y, boundarySize);
   
-  dangerZones.forEach(function(p){
+  blessedZones.forEach(function(p){
     p.update();
     p.show();
     if (isBirdInRing(pMain, p)) {
-      birdPassedRing();
+      birdPassedRing(p);
     }
   });
   
   noStroke();
   fill("blue");
-  circle(width/2, height/2, boundaryGrd);
+  circle(cen().x, cen().y, boundaryGrd);
   
   showInfo();
   showCrossline();
@@ -240,27 +251,36 @@ function draw() {
   pMain.update();
   pMain.show();
 }
+// Player input
 function keyPressed(event){
   if (keyCode == 32){
     pMain.jump();
   }
 }
-function birdPassedRing(){
-  print("A ring has been passed!");
+// Game loop
+function birdPassedRing(isRing){
+  // print("A ring has been passed!");
+
+  // TODO: add ringPassed timeout
+  // if (!hasJustPassedRing){
+  ringsPassed++;
+  hasJustPassedRing = true;
+  // }
+  // } else if (hasJustPassedRing && Math.abs(pMain.getAngle() - isRing.angle) > 4.0){
+  //   hasJustPassedRing = false;
+  // }
+  print(ringsPassed);
 }
-function isBirdInRing(bird, pillar) {
-  // Normalize the bird's position relative to the center
-  const birdDistance = bird.diameter;
+function isBirdInRing(bird, ring) {
+  // Apparently, I've fucked up the way measurements are handled in the code so much that pMain.diameter =/= ring.passThrough
+  // the variable offset troubleshoots this
+  // ...Sigh
+  const offset = 1.6;
+  const threshold = 2.0;
 
-  var offset = 1.5;
-  // Check if the bird's distance is within the pillar's gap
-  const withinGap =
-    birdDistance > pillar.passThrough*offset &&
-    birdDistance < (pillar.passThrough + pillar.gapHeight)*offset;
+  const withinRing = bird.diameter > ring.passThrough * offset && bird.diameter < (ring.passThrough + ring.ringH) * offset;
 
-  // Check if the bird's angle is approximately equal to the pillar's angle
-  const withinAngle = Math.abs(bird.getPosAngle() - pillar.angle) < 2.0;
+  const withinAngle = Math.abs(bird.getAngle() - ring.angle) < threshold;
 
-  // Return true if both conditions are met
-  return withinGap && withinAngle;
+  return withinRing && withinAngle;
 }

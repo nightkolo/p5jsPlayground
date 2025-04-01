@@ -17,6 +17,7 @@ The Github Pages deployment would be coming soon.
 ## Interesting ones
 | Link      | Devlog     |
 | ------------- | ------------- |
+| [360&deg; Broken Wing (WIP)](360-broken-wing/) | Probably the most extensive game I've coded so far. Trigonometry and Geometry had great applications to making this game possible. Although the math got pretty complex, it was... fun? Admittedly, I might've not implemented it the best way, but it works I suppose. |
 | [Blow 'Till Pop](blow-til-pop/) | An endless game where you blow bubbles and avoid bursting them. Simple on surface, but quite interesting to code, probably the most fun I've had coding with Geometry. |
 | [Bouncing Ball](bouncing-ball/) | I coded this as a simple and sweet visual, inspired by Windows' solitare win screen. |
 | [Circlepong](circlepong/) | This is a highly primitive game I coded inspired by Pong. |
