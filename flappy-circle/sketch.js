@@ -1,7 +1,8 @@
 var grav = 0.7;
-const spikeSize = 75;
 var spikePercent = 0.25;
 var spikes = [];
+
+const spikeSize = 75;
 const spikesEas = new Array(
   [0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 1, 0, 1, 0, 0],
@@ -13,16 +14,15 @@ const spikesEas = new Array(
   [0, 1, 0, 0, 1, 0, 0, 1],
 );
 const spikesMed = new Array(
-  [0, 2, 0, 0, 0, 2, 0, 0]  
-  // [0, 1, 0, 1, 0, 0, 1, 0],
-  // [1, 0, 1, 1, 1, 0, 0, 1],
-  // [0, 1, 1, 0, 1, 0, 0, 1],
-  // [1, 0, 0, 1, 0, 1, 1, 0],
-  // [1, 0, 0, 1, 1, 0, 0, 1],
-  // [0, 0, 1, 1, 1, 1, 0, 0],
-  // [1, 1, 1, 0, 0, 1, 1, 1],
-  // [1, 0, 0, 1, 0, 0, 1, 0],
-  // [1, 1, 0, 1, 0, 1, 0, 0]
+  [0, 1, 0, 1, 0, 0, 1, 0],
+  [1, 0, 1, 1, 1, 0, 0, 1],
+  [0, 1, 1, 0, 1, 0, 0, 1],
+  [1, 0, 0, 1, 0, 1, 1, 0],
+  [1, 0, 0, 1, 1, 0, 0, 1],
+  [0, 0, 1, 1, 1, 1, 0, 0],
+  [1, 1, 1, 0, 0, 1, 1, 1],
+  [1, 0, 0, 1, 0, 0, 1, 0],
+  [1, 1, 0, 1, 0, 1, 0, 0]
 );
 const spikesHar = new Array(
   [1, 0, 1, 0, 1, 0, 1, 0],
@@ -33,16 +33,25 @@ const spikesHar = new Array(
   [1, 1, 0, 1, 1, 1, 0, 1],
   [0, 1, 1, 0, 1, 0, 1, 1],
   [1, 1, 1, 1, 1, 1, 1, 0],
-  [0, 1, 1, 0, 0, 0, 0, 0]
+  [0, 1, 2, 0, 0, 0, 2, 0],
+  [0, 2, 2, 0, 2, 0, 2, 0],
+  [0, 1, 2, 1, 2, 0, 2, 0],
+  [1, 1, 1, 1, 1, 2, 2, 1],
+  [0, 2, 0, 2, 0, 1, 2, 1],
 );
-let movingSpikes = [];
 
 var score = 0;
-var t = 14;
+var t = 0;
+
 var difficulty = 1;
+var mediumDiffTime = 15;
+var hardDiffTime = 40;
+var extremeDiffTime = 65;
+var thereAreScaryMovingSpikes = false;
 
 let p;
 let spikeLength = 0;
+let movingSpikes = [];
 
 const getCurrentSpikes = function(){
   switch (difficulty){
@@ -70,7 +79,6 @@ class Player {
     this.iniSpdX = this.spdX;
   }
   reset() {
-    print(this.iniSpdX);
     this.spdX = this.iniSpdX;
   }
   hitWall() {
@@ -103,6 +111,7 @@ class Player {
     this.velY = this.jumpHeight;
   }
 }
+
 class MovingSpike {
   constructor(pY, pX, pSpeed = 0.3){
     this.y = pY;
@@ -121,16 +130,6 @@ function setSpikes() {
   spikeLength = height / spikeSize;
   newSpikes();
 }
-
-var areThereScaryMovingSpikes = false;
-
-function getSpikeDir(){
-  return (width/2) + (p.dirX * (width/2));
-}
-function getSpikeY(index){
-  return (spikeSize/2) + (index * spikeSize);
-}
-
 function generateSpikes(){
   for (let i = 0; i < spikeLength; i++) {
     rectMode(CENTER);
@@ -148,10 +147,10 @@ function newSpikes() {
 
   movingSpikes = [];
 
-  if (t < 15){
+  if (t < mediumDiffTime){
     entry = spikesEas[floor(random() * spikesEas.length)];
     difficulty = 1;
-  } else if (t < 40){
+  } else if (t < hardDiffTime){
     entry = spikesMed[floor(random() * spikesMed.length)];
     difficulty = 2;
   } else {
@@ -165,9 +164,9 @@ function newSpikes() {
     spikes = Array.from(entry);
   }
   
-  areThereScaryMovingSpikes = spikes.includes(2);
+  thereAreScaryMovingSpikes = spikes.includes(2);
 
-  if (areThereScaryMovingSpikes){
+  if (thereAreScaryMovingSpikes){
     for (let i = 0; i < spikeLength; i++) {
       if (spikes[i] == 2) {
         let dir = getSpikeDir();
@@ -180,7 +179,7 @@ function newSpikes() {
     }
   }
 }
-function gameLoop(){
+function showInfo(){
   t += 1/60;
   textAlign(CENTER);
   fill(0,0,0,0.5*255);
@@ -197,14 +196,14 @@ function setup() {
 function draw() {
   background(127, 127, 55);
   rectMode(CENTER);
-  gameLoop();
+  showInfo();
   fill("white");
   generateSpikes();
 
-  if (areThereScaryMovingSpikes){
-    movingSpikes.forEach((spike) => {
-      spike.update();
-      spike.show();
+  if (thereAreScaryMovingSpikes){
+    movingSpikes.forEach((mS) => {
+      mS.update();
+      mS.show();
     });
   }
 
@@ -213,6 +212,14 @@ function draw() {
 
   if (p.hitWall()) {
     wallHit();
+  }
+}
+function mousePressed() {
+  p.jump();
+}
+function keyPressed() {
+  if (keyCode == 32){
+    p.jump();
   }
 }
 function checkHitSpikes(atPosY = p.y) {
@@ -226,7 +233,7 @@ function checkHitSpikes(atPosY = p.y) {
       }
       if (spikes[i] == 2) {
         for (let spike of movingSpikes) {
-          print(spike.y - (spikeSize/2), atPosY, spike.y + (spikeSize/2), atPosY > spike.y - (spikeSize/2) && atPosY < spike.y + (spikeSize/2));
+          // print(spike.y - (spikeSize/2), atPosY, spike.y + (spikeSize/2), atPosY > spike.y - (spikeSize/2) && atPosY < spike.y + (spikeSize/2));
 
           if (
             atPosY > spike.y - (spikeSize/2) &&
@@ -239,6 +246,12 @@ function checkHitSpikes(atPosY = p.y) {
     }
   }
   return false;
+}
+function getSpikeDir(){
+  return (width/2) + (p.dirX * (width/2));
+}
+function getSpikeY(index){
+  return (spikeSize/2) + (index * spikeSize);
 }
 function wallHit() {
   if (!checkHitSpikes(p.y)){
@@ -257,12 +270,4 @@ function gameOver(){
   t = 0;
   score = 0;
   p.reset();
-}
-function mousePressed() {
-  p.jump();
-}
-function keyPressed() {
-  if (keyCode == 32){
-    p.jump();
-  }
 }
