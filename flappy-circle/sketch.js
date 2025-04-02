@@ -13,7 +13,7 @@ const spikesEas = new Array(
   [0, 1, 0, 0, 1, 0, 0, 1],
 );
 const spikesMed = new Array(
-  [1, 2, 0, 2, 0, 2, 0, 0]  
+  [0, 2, 0, 0, 0, 2, 0, 0]  
   // [0, 1, 0, 1, 0, 0, 1, 0],
   // [1, 0, 1, 1, 1, 0, 0, 1],
   // [0, 1, 1, 0, 1, 0, 0, 1],
@@ -104,27 +104,25 @@ class Player {
   }
 }
 class MovingSpike {
-  constructor(pY, pX){
+  constructor(pY, pX, pSpeed = 0.3){
     this.y = pY;
     this.x = pX;
+    this.speed = -1 * Math.sign(pY - (height/2)) * pSpeed;
   }
   update(){
-    this.y += 0.2;
+    this.y += this.speed;
   }
   show(){
     rectMode(CENTER);
-    rect(this.x, this.y, spikeSize/2, spikeSize); 
+    rect(this.x, this.y, spikeSize / 2, spikeSize); 
   }
 }
 function setSpikes() {
-  spikeLength = height/spikeSize;
-  // for (let i = 0; i < spikeLength; i += 1) {
-  //   spikes[i] = 0;
-  // }
+  spikeLength = height / spikeSize;
   newSpikes();
 }
 
-var areMovingSpikes = false;
+var areThereScaryMovingSpikes = false;
 
 function getSpikeDir(){
   return (width/2) + (p.dirX * (width/2));
@@ -134,38 +132,20 @@ function getSpikeY(index){
 }
 
 function generateSpikes(){
-  // areMovingSpikes = false;
-  // movingSpikes = [];
-
   for (let i = 0; i < spikeLength; i++) {
     rectMode(CENTER);
   
     let dir = getSpikeDir();
     let posY = getSpikeY(i);
     
-    // areMovingSpikes = spikes.includes(2);
-
     if (spikes[i] == 1){
       rect(dir, posY, spikeSize/2, spikeSize); 
     }
-    // else if (spikes[i] == 2) {
-    //   print("Spike two detected")
-    //   movingSpikes.push({
-    //     x: dir,
-    //     y: posY
-    //   });
-    // }
-    
-    // if (areMovingSpikes){
-    //   // areMovingSpikes = spikes[i] == 2
-    // }
   }
-}
-function areMenerateMovingSpikes(){
-
 }
 function newSpikes() {
   let entry = [];
+
   movingSpikes = [];
 
   if (t < 15){
@@ -174,7 +154,6 @@ function newSpikes() {
   } else if (t < 40){
     entry = spikesMed[floor(random() * spikesMed.length)];
     difficulty = 2;
-    // print("selected")
   } else {
     entry = spikesHar[floor(random() * spikesHar.length)];
     difficulty = 3;
@@ -186,23 +165,17 @@ function newSpikes() {
     spikes = Array.from(entry);
   }
   
-  areMovingSpikes = spikes.includes(2);
+  areThereScaryMovingSpikes = spikes.includes(2);
 
-  if (areMovingSpikes){
+  if (areThereScaryMovingSpikes){
     for (let i = 0; i < spikeLength; i++) {
       if (spikes[i] == 2) {
-        print("Spike two detected");
-        
         let dir = getSpikeDir();
         let posY = getSpikeY(i);
 
         let movingSpike = new MovingSpike(posY, dir);
 
         movingSpikes.push(movingSpike);
-        // movingSpikes.push({
-        //   x: dir,
-        //   y: posY
-        // });
       }
     }
   }
@@ -221,9 +194,6 @@ function setup() {
   p = new Player();
   setSpikes();
 }
-
-
-
 function draw() {
   background(127, 127, 55);
   rectMode(CENTER);
@@ -231,53 +201,36 @@ function draw() {
   fill("white");
   generateSpikes();
 
-  if (areMovingSpikes){
+  if (areThereScaryMovingSpikes){
     movingSpikes.forEach((spike) => {
       spike.update();
       spike.show();
     });
   }
 
-    // spikes.forEach(function(spike){
-    //   // let currentSpikes = getCurrentSpikes();
-
-    //   for (let i = 0; i < spikes.length; i++){
-    //     if (spikes[i] == 2){
-    //       let dir = getSpikeDir();
-    //       let posY = getSpikeY(i);
-
-    //       posY += 100;
-
-    //       rect(dir, posY, spikeSize/2, spikeSize); 
-    //     }
-    //   }
-    // })
-
   p.update();
   p.show();
+
   if (p.hitWall()) {
     wallHit();
   }
 }
-function checkHitSpikes(atPosY) {
+function checkHitSpikes(atPosY = p.y) {
   if (spikeLength > 0) {
     for (let i = 0; i < spikeLength; i++) {
-      // Check for static spikes
       if (spikes[i] == 1 &&
         atPosY > i * spikeSize &&
         atPosY < (i * spikeSize) + spikeSize
       ) {
         return true;
       }
-
-      // Check for moving spikes
       if (spikes[i] == 2) {
         for (let spike of movingSpikes) {
-          // print(spike.y, atPosY, spike.y + spikeSize, atPosY > spike.y && atPosY < spike.y + spikeSize);
+          print(spike.y - (spikeSize/2), atPosY, spike.y + (spikeSize/2), atPosY > spike.y - (spikeSize/2) && atPosY < spike.y + (spikeSize/2));
 
           if (
-            atPosY > spike.y &&
-            atPosY < spike.y + spikeSize
+            atPosY > spike.y - (spikeSize/2) &&
+            atPosY < spike.y + (spikeSize/2)
           ) {
             return true;
           }
@@ -287,23 +240,6 @@ function checkHitSpikes(atPosY) {
   }
   return false;
 }
-// function checkHitSpikes(pos){
-//   if (spikeLength > 0){
-//     for (let i = 0; i < spikeLength; i++){
-//       if (spikes[i] == 1 && pos > i * spikeSize && pos < (i * spikeSize)+spikeSize){
-//         return true;
-//       }
-//       if (spikes[i] == 2){
-//         movingSpikes.forEach(function(spike){
-//           if (pos > spike.y && pos < spike.y + spikeSize){
-//             return true;
-//           }
-//         })
-//       }
-//     }
-//     return false;
-//   }
-// }
 function wallHit() {
   if (!checkHitSpikes(p.y)){
     p.increaseSpd();
