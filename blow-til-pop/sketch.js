@@ -13,7 +13,7 @@ class Bubble {
     this.bubY = y
     this.bubSpeedX = 0;
     this.bubSpeedY = 0;
-    this.bubInc = 0.8;
+    this.bubInc = 1.6;
     this.bubSize = size;
     this.dir = {
       x: Math.sign(Math.random()-0.5), y: Math.sign(Math.random()-0.5)
@@ -72,7 +72,7 @@ function bubbleHasBursted(bursted_bub){
 function setup() {
   createCanvas(canSize, canSize);
   frameRate(60);
-  firstBubble = new Bubble(width/2, height/2, 30, false);
+  firstBubble = new Bubble(width/2, height/2, 60, false);
   bubbles.push(firstBubble)
 }
 function draw() {

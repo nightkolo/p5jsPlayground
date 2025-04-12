@@ -36,7 +36,7 @@ const spikesHar = new Array(
   [0, 1, 2, 0, 0, 0, 2, 0],
   [0, 2, 2, 0, 2, 0, 2, 0],
   [0, 1, 2, 1, 2, 0, 2, 0],
-  [1, 1, 1, 1, 1, 2, 2, 1],
+  [1, 1, 1, 1, 2, 0, 2, 1],
   [0, 2, 0, 2, 0, 1, 2, 1],
 );
 
@@ -67,6 +67,13 @@ const getCurrentSpikes = function(){
   }
 }
 
+// Juice
+var bgCol = [127, 127, 55];
+var birdCol = [255,255,255];
+var birdStroke = 5;
+var flapFlash = 1.25;
+
+
 class Player {
   constructor() {
     this.size = 50;
@@ -84,31 +91,45 @@ class Player {
   hitWall() {
     return this.x > width-(this.size/2) || this.x < 0+(this.size/2);
   }
-  increaseSpd(inc = 0.05){
+  increaseSpd(inc = 0.075) {
     this.spdX += inc;
+    print(this.spdX);
   }
   update() {
     this.velY += grav;
     this.y += this.velY;
     this.x += this.spdX * Math.sign(this.dirX);
 
-    if (this.x > width-(this.size/2) || this.x < 0+(this.size/2)) {
+    if (this.x > width - (this.size / 2) || this.x < this.size / 2) {
       this.dirX = -this.dirX;
     }
 
-    if (this.y > height-(this.size/2)) {
-      this.y = height-(this.size/2);
+    if (this.y > height-(this.size / 2)) {
+      this.y = height-(this.size / 2);
       this.velY = 0;
-    } else if (this.y < 0+(this.size/2)) {
-      this.y = 0+(this.size/2);
+    } else if (this.y < 0+(this.size / 2)) {
+      this.y = 0+(this.size / 2);
       this.velY = 0;
     }
   }
   show() {
+    stroke(0,0,0);
+    strokeWeight(birdStroke);
+    fill(birdCol);
     circle(this.x, this.y, this.size);
   }
   jump() {
     this.velY = this.jumpHeight;
+  }
+  reset() {
+    this.size = 50;
+    this.y = height/2;
+    this.x = width/2;
+    this.velY = 0;
+    this.spdX = 5.5;
+    this.dirX = 1;
+    this.jumpHeight = -12.5;
+    this.iniSpdX = this.spdX;
   }
 }
 
@@ -123,6 +144,7 @@ class MovingSpike {
   }
   show(){
     rectMode(CENTER);
+    stroke(0,0,0);
     rect(this.x, this.y, spikeSize / 2, spikeSize); 
   }
 }
@@ -130,7 +152,7 @@ function setSpikes() {
   spikeLength = height / spikeSize;
   newSpikes();
 }
-function generateSpikes(){
+function generateSpikes() {
   for (let i = 0; i < spikeLength; i++) {
     rectMode(CENTER);
   
@@ -138,6 +160,8 @@ function generateSpikes(){
     let posY = getSpikeY(i);
     
     if (spikes[i] == 1){
+      stroke(255/2,0,0);
+      strokeWeight(2);
       rect(dir, posY, spikeSize/2, spikeSize); 
     }
   }
@@ -183,9 +207,13 @@ function showInfo(){
   t += 1/60;
   textAlign(CENTER);
   fill(0,0,0,0.5*255);
-  textSize(60);
-  text(`${score}`, width/2, height/2);
-  text(`${Math.floor(t)}`, width/2, (height/2)+100)
+  textSize(160);
+  noStroke();
+  fill(255,255,255,255/2);
+  text(`${score}`, width/2, (height/2)+50);
+  fill(0,0,0,255/4);
+  circle(width/2, (height/2), 300);
+  // text(`${Math.floor(t)}`, width/2, (height/2)+100)
 }
 function setup() {
   createCanvas(700, 600);
@@ -194,7 +222,7 @@ function setup() {
   setSpikes();
 }
 function draw() {
-  background(127, 127, 55);
+  background(bgCol);
   rectMode(CENTER);
   showInfo();
   fill("white");

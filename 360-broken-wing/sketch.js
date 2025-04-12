@@ -1,7 +1,6 @@
 // A game about a bird with broken wings :(
-// I mean... it works?
-// If some functions look copilot-generated, that's because they are.
-// It is only the functions with comments in them though, but the other parts of the code and the entire algorithm are my own work
+
+// TODO: needs refactoring
 
 const grav = 0.25;
 
@@ -11,19 +10,13 @@ const boundaryGrd = 150;
 var rounds = -1;
 var ringsPassed = 0;
 var crossline = 180;
+var crosslineSpd = 1;
 
 var hasCrossed = false;
 var hasJustPassedRing = false;
-var blessedZones = [];
-
-const cen = function(){
-  return {
-    x: width / 2,
-    y: height / 2,
-  };
-}
 
 let pMain;
+let blessedZones = [];
 
 class PoorBird {
   constructor() {
@@ -42,7 +35,7 @@ class PoorBird {
       y: cos(this.t / this.slowness),
     };
   }
-  getAngle(){
+  getAngle() {
     const normal = this.getNormalizedPos();
     return 360 - findVector(normal.x, normal.y);
   }
@@ -72,7 +65,7 @@ class PoorBird {
   }
 }
 class Ring {
-  constructor(pAngle, pPassThrough = 0, pRingH = 90){
+  constructor(pAngle, pPassThrough = 0, pRingH = 90) {
     this.angle = pAngle;
     this.passThrough = pPassThrough;
     this.ringH = pRingH;
@@ -82,13 +75,16 @@ class Ring {
     this.ringY2 = 0;
   }
   update() {
-    const pos = findPos(this.angle); // Get the position based on the angle
-
-    // Calculate the offset for the ring based on the angle
-    const offsetX = pos.x * this.passThrough; // Offset in the x direction
-    const offsetY = pos.y * this.passThrough; // Offset in the y direction
+    // God bless, trigonometry
     
-    // Calculate the start and end points of the ring
+    // Gets ring's position based on the angle
+    const pos = findPos(this.angle);
+
+    // Calculates an offset for the ring based on the position
+    const offsetX = pos.x * this.passThrough;
+    const offsetY = pos.y * this.passThrough;
+    
+    // Calculate the start and end points of the ring line
     this.ringX1 = (pos.x * (boundaryGrd / 2)) + cen().x + offsetX;
     this.ringY1 = (pos.y * (boundaryGrd / 2)) + cen().y + offsetY;
     this.ringX2 = this.ringX1 + (pos.x * this.ringH);
@@ -96,93 +92,14 @@ class Ring {
   }
   show() {
     strokeWeight(10);
-    // Draw the ring (red line)
     stroke("red");
     line(this.ringX1, this.ringY1, this.ringX2, this.ringY2);
   }
 }
-// Math helpers
-function findPos(angle){
-  const rad = (angle + 90) * (Math.PI / 180);
-  return {
-    x: Math.cos(rad),
-    y: Math.sin(rad),
-  };
-}
-function findVector(x, y){
-  let value = 0;
-
-  const findQuadrant = function(x, y) {
-    if (x > 0 && y > 0) {return 1; }
-    else if (x < 0 && y > 0) {return 2; }
-    else if (x < 0 && y < 0) {return 3; }
-    else if (x > 0 && y < 0) {return 4; }
-  }
-  
-  if (x === 0 && y == 0) {
-    return NaN;
-  } else if (x === 0) {
-    if (y > 0) {
-      value = Math.PI / 2.0;
-    } else if (y < 0) {
-      value = Math.PI * 1.5;
-    }
-  } else if (y === 0) {
-    if (x > 0) {
-      value = Math.PI;
-    } else if (x < 0) {
-      value = 0;
-    }
-  } else {
-    switch (findQuadrant(x, y)) {
-      case 1:
-        value = Math.abs(Math.atan(y / x));
-        break;
-      case 2:
-        value = Math.PI - Math.abs(Math.atan(y / x));
-        break;
-      case 3:
-        value = Math.PI + Math.abs(Math.atan(y / x));
-        break;
-      case 4:
-        value = (Math.PI * 2.0) - Math.abs(Math.atan(y / x));
-        break;
-      }
-    }
-    return value * (180.0 / Math.PI);
-  }
-// function generateCrossline(normalizedPos){
-//   return [
-//     (normalizedPos.x * (boundaryGrd/2)) + (cen().x),
-//     (normalizedPos.y * (boundaryGrd/2)) + (cen().y),
-//     (normalizedPos.x * (boundarySize/2)) + (cen().x),
-//     (normalizedPos.y * (boundarySize/2)) + (cen().y)
-//   ]
-// }
-// function showring(angle = 359, passThrough = 0, ringH = 100, weight = 15) {
-//   const pos = findPos(angle);
-//   const gLine = generateCrossline(pos); 
-
-//   strokeWeight(weight);
-//   stroke(255, 0, 0);
-//   line(gLine[0], gLine[1], gLine[2], gLine[3]);
-
-//   const offsetX = pos.x * passThrough; 
-//   const offsetY = pos.y * passThrough;
-
-//   const ringX1 = (pos.x * (boundaryGrd / 2)) + (cen().x) + offsetX;
-//   const ringY1 = (pos.y * (boundaryGrd / 2)) + (cen().y) + offsetY;
-//   const ringX2 = ringX1 + (pos.x * ringH);
-//   const ringY2 = ringY1 + (pos.y * ringH);
-
-//   stroke("white");
-//   line(ringX1, ringY1, ringX2, ringY2);
-// }
 
 // Environment
-function showCrossline(cross = crossline, weight = 15, opacity = 255/4){
+function showCrossline(cross = crossline, weight = 15, opacity = 255/4) {
   const pos = findPos(cross);
-  // const gLine = generateCrossline(pos);
 
   strokeWeight(weight);
   stroke(0,0,0,opacity);
@@ -198,42 +115,39 @@ function showInfo() {
   textSize(60);
   textAlign(CENTER);
   
-  // TODO: maybe refactor this glue and butter stitched together code
-  if (pMain.getAngle() > crossline && !hasCrossed){
-    rounds++;
-    hasCrossed = true;
-  } else if (pMain.getAngle() < crossline){
+  if (pMain.getAngle() > crossline && !hasCrossed) {
+    birdPassedCrossline();
+  } else if (pMain.getAngle() < crossline) {
     hasCrossed = false;
   }
 
   noStroke();
-  text(`${rounds}`, cen().x, cen().y);
+  text(`${rounds}`, cen().x, cen().y-10);
+  text(`${ringsPassed}`, cen().x, cen().y+60);
 }
 
 // p5.js
-let pill;
-let pill2;
-
 function setup() {
   createCanvas(700, 600);
   frameRate(60);
   pMain = new PoorBird();
 
-  pill = new Ring(90, 90, 30);
-  pill2 = new Ring(270, 0);
-
-  blessedZones.push(pill);
-  blessedZones.push(pill2);
+  generateRings();
 }
 function draw() {
   background("blue");
   rectMode(CENTER);  
   noStroke();
   
+  crossline -= crosslineSpd/10;
+  if (crossline < 0) {
+    crossline = 360;
+  }
+
   fill("white");
   circle(cen().x, cen().y, boundarySize);
   
-  blessedZones.forEach(function(p){
+  blessedZones.forEach(function(p) {
     p.update();
     p.show();
     if (isBirdInRing(pMain, p)) {
@@ -251,24 +165,52 @@ function draw() {
   pMain.update();
   pMain.show();
 }
+
 // Player input
-function keyPressed(event){
-  if (keyCode == 32){
+function keyPressed() {
+  if (keyCode == 32) {
     pMain.jump();
   }
 }
-// Game loop
-function birdPassedRing(isRing){
-  // print("A ring has been passed!");
+function mousePressed() {
+  pMain.jump();
+}
 
-  // TODO: add ringPassed timeout
-  // if (!hasJustPassedRing){
-  ringsPassed++;
-  hasJustPassedRing = true;
-  // }
-  // } else if (hasJustPassedRing && Math.abs(pMain.getAngle() - isRing.angle) > 4.0){
-  //   hasJustPassedRing = false;
-  // }
+// Game loop
+function generateRings() {
+  blessedZones = [];
+
+  // Generates a random number of rings
+  const numRings = Math.floor(random(3, 7));
+
+  for (let i = 0; i < numRings; i++) {
+    // Positions the rings evenly.
+    const angle = (360/numRings) * i;
+
+    // Randomizes the passThrough distance
+    const passThrough = random(boundarySize/16, boundarySize / 4);
+
+    // Randomizes the ring height
+    const ringHeight = random(40, 100);
+
+    const newRing = new Ring(angle, passThrough, ringHeight);
+    blessedZones.push(newRing);
+  }
+}
+function birdPassedCrossline() {
+  rounds++;
+  hasCrossed = true;
+  generateRings();
+}
+function birdPassedRing(isRing) {
+  if (!hasJustPassedRing) {
+    ringsPassed++;
+    hasJustPassedRing = true;
+
+    setTimeout(() => {
+      hasJustPassedRing = false;
+    }, 500);
+  }
   print(ringsPassed);
 }
 function isBirdInRing(bird, ring) {
