@@ -13,7 +13,7 @@ class Bubble {
     this.bubY = y
     this.bubSpeedX = 0;
     this.bubSpeedY = 0;
-    this.bubInc = 1.6;
+    this.bubInc = 1;
     this.bubSize = size;
     this.dir = {
       x: Math.sign(Math.random()-0.5), y: Math.sign(Math.random()-0.5)
@@ -30,8 +30,8 @@ class Bubble {
   }
   update(){
     if (this.isAlive) {
-      this.bubSpeedX = this.speedFactor/this.bubSize;
-      this.bubSpeedY = (this.speedFactor-10)/this.bubSize;
+      this.bubSpeedX = this.bubSize !== 0 ? this.speedFactor / this.bubSize : 0;
+      this.bubSpeedY = this.bubSize !== 0 ? (this.speedFactor - 10) / this.bubSize : 0;
   
       if (this.isBlown) {
         this.bubSize += this.bubInc;
